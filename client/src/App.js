@@ -2,7 +2,11 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import "./App.css";
 import artifacts from "./artifacts.json";
-import { toString, toWei, toEther, calcDaysRemaining } from "./helpers";
+import Navbar from "./components/Navbar";
+import StakeModal from "./components/StakeModal";
+import { toWei, toEther, calcDaysRemaining } from "./helpers";
+import { Coin } from "react-bootstrap-icons";
+import etherlogo from "./etherlogo.png";
 
 const { address, abi } = artifacts;
 
@@ -20,30 +24,44 @@ function App() {
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [stakingLength, setStakingLength] = useState(undefined);
   const [stakingPercent, setStakingPercent] = useState(undefined);
-  const [amount, setAmount] = useState(0);
-
-  useEffect(() => {
-    const onLoad = async () => {
-      const _provider = await new ethers.BrowserProvider(window.ethereum);
-      setProvider(_provider);
-      const _contract = await new ethers.Contract(address, abi, provider);
-      setContract(_contract);
-    };
-    onLoad();
-  }, []);
+  const [amount, setAmount] = useState("0");
 
   const isConnected = () => signer !== undefined;
 
-  const getSigner = async () => {
-    provider.send("eth_requestAccounts", []);
-    return provider.getSigner();
+  useEffect(() => {
+    const load = async () => {
+      const _provider = await new ethers.BrowserProvider(window.ethereum);
+      setProvider(_provider);
+      const accounts = await _provider.send("eth_accounts", []);
+      if (accounts.length > 0) {
+        const _signer = await _provider.getSigner();
+        setSigner(_signer);
+        const _signerAddress = await _signer.getAddress();
+        setSignerAddress(_signerAddress);
+        const _contract = await new ethers.Contract(address, abi, _signer);
+        setContract(_contract);
+      }
+    };
+    load();
+  }, []);
+
+  const connectWallet = async () => {
+    const _provider = await new ethers.BrowserProvider(window.ethereum);
+    setProvider(_provider);
+    await _provider.send("eth_requestAccounts", []);
+    const _signer = await _provider.getSigner();
+    setSigner(_signer);
+    const _signerAddress = await _signer.getAddress();
+    setSignerAddress(_signerAddress);
+    const _contract = await new ethers.Contract(address, abi, _signer);
+    setContract(_contract);
   };
 
-  const getAssetIds = async (address, signer) => {
-    return await contract.connect(signer).getPositionIdsForAddress(address);
+  const getAssetIds = async () => {
+    return await contract.getPositionIdsForAddress(signerAddress);
   };
   const getAssets = async (ids, signer) => {
-    const result = await Promise.all(ids.map((id) => contract.connect(signer).getPositionById(id)));
+    const result = await Promise.all(ids.map((id) => contract.getPositionById(id)));
     const _assets = result.map((asset) => ({
       positionId: asset.positionId,
       percentInterest: Number(asset.percentIntereset) / 100,
@@ -55,14 +73,10 @@ function App() {
     return _assets;
   };
 
-  const connectAndLoad = async () => {
-    const _signer = await getSigner();
-    setSigner(_signer);
-    const _signerAddress = await _signer.getAddress();
-    setSignerAddress(_signerAddress);
-    const _assetIds = await getAssetIds(_signerAddress, _signer);
+  const loadData = async () => {
+    const _assetIds = await getAssetIds();
     setAssetIds(_assetIds);
-    setAssets(await getAssets(_assetIds, _signer));
+    setAssets(await getAssets(_assetIds));
   };
 
   const openStakingModal = (_stakingLength, _stakingPercent) => {
@@ -71,17 +85,136 @@ function App() {
     setStakingPercent(_stakingPercent);
   };
 
-  const stakeEther = async (amount) => {
+  const stakeEther = async () => {
     const wei = toWei(amount);
     const data = { value: wei };
-    await contract.connect(signer).stackEther(stakingLength, data);
+    const tx = await contract.stackEther(stakingLength, data);
+    await tx.wait();
+    await loadData();
   };
 
   const withdraw = async (positionId) => {
-    await contract.connect(signer).closePosition(positionId);
+    const tx = await contract.closePosition(positionId);
+    await tx.wait();
+    await loadData();
   };
 
-  return <div className="App"></div>;
+  useEffect(() => {
+    signer && loadData();
+  }, [signer]);
+
+  return (
+    <div className="App">
+      <div>
+        <Navbar isConnected={isConnected} connect={connectWallet} signer={signerAddress} />
+      </div>
+
+      <div className="appBody mb-5">
+        <div className="marketContainer">
+          <div className="subContainer">
+            <span>
+              <img className="logoImg" src={etherlogo} />
+            </span>
+            <span className="marketHeader">Ethereum Market</span>
+          </div>
+
+          <div className="row">
+            <div className="col-md-4">
+              <div onClick={() => openStakingModal(30, "7%")} className="marketOption">
+                <div className="glyphContainer hoverButton">
+                  <span className="glyph">
+                    <Coin />
+                  </span>
+                </div>
+                <div className="optionData">
+                  <span>1 Month</span>
+                  <span className="optionPercent">2%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div onClick={() => openStakingModal(90, "10%")} className="marketOption">
+                <div className="glyphContainer hoverButton">
+                  <span className="glyph">
+                    <Coin />
+                  </span>
+                </div>
+                <div className="optionData">
+                  <span>3 Months</span>
+                  <span className="optionPercent">10%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div onClick={() => openStakingModal(180, "12%")} className="marketOption">
+                <div className="glyphContainer hoverButton">
+                  <span className="glyph">
+                    <Coin />
+                  </span>
+                </div>
+                <div className="optionData">
+                  <span>6 Months</span>
+                  <span className="optionPercent">12%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="assetContainer">
+          <div className="subContainer">
+            <span className="marketHeader">Staked Assets</span>
+          </div>
+          <div>
+            <div className="row columnHeaders">
+              <div className="col-md-2">Assets</div>
+              <div className="col-md-2">Percent Interest</div>
+              <div className="col-md-2">Staked</div>
+              <div className="col-md-2">Interest</div>
+              <div className="col-md-2">Days Remaining</div>
+              <div className="col-md-2"></div>
+            </div>
+          </div>
+          <br />
+          {assets.length > 0 &&
+            assets.map((a, idx) => (
+              <div key={idx} className="row">
+                <div className="col-md-2">
+                  <span>
+                    <img className="stakedLogoImg" src={etherlogo} />
+                  </span>
+                </div>
+                <div className="col-md-2">{a.percentInterest} %</div>
+                <div className="col-md-2">{a.etherStaked}</div>
+                <div className="col-md-2">{a.etherInterest}</div>
+                <div className="col-md-2">{a.daysRemaining}</div>
+                <div className="col-md-2">
+                  {a.open ? (
+                    <div onClick={() => withdraw(a.positionId)} className="orangeMiniButton">
+                      Withdraw
+                    </div>
+                  ) : (
+                    <span>closed</span>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+      {showStakeModal && (
+        <StakeModal
+          onClose={() => setShowStakeModal(false)}
+          stakingLength={stakingLength}
+          stakingPercent={stakingPercent}
+          amount={amount}
+          setAmount={setAmount}
+          stakeEther={stakeEther}
+        />
+      )}
+    </div>
+  );
 }
 
 export default App;
