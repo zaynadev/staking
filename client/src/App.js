@@ -154,7 +154,7 @@ function App() {
             </div>
 
             <div className="col-md-4">
-              <div onClick={() => openStakingModal(2, "15%")} className="marketOption">
+              <div onClick={() => openStakingModal(3, "15%")} className="marketOption">
                 <div className="glyphContainer hoverButton">
                   <span className="glyph">
                     <Coin />
