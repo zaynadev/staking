@@ -15,27 +15,27 @@ contract Staking {
     uint256 public currentPositionId;
     mapping(uint256 => Position) public positions; // position id => position
     mapping(address => uint256[]) public positionsIdsByAddress; // user address => user position ids
-    mapping(uint256 => uint256) public tiers; // number of days => percent interset to earn
-    uint256[3] public lockPeriods = [30, 90, 180];
+    mapping(uint256 => uint256) public tiers; // number of minutes => percent interset to earn
+    uint256[3] public lockPeriods = [1, 2, 3];
 
     constructor() payable {
-        tiers[30] = 200; // 2%
-        tiers[90] = 1000; // 10%
-        tiers[180] = 1500; // 15%
+        tiers[1] = 200; // 2%
+        tiers[2] = 1000; // 10%
+        tiers[3] = 1500; // 15%
     }
 
     receive() external payable {}
 
-    function stackEther(uint256 numberOfDays) external payable {
-        uint256 percentIntereset = tiers[numberOfDays];
-        require(percentIntereset > 0, "Invalid number of days");
+    function stackEther(uint256 numberOfMinutes) external payable {
+        uint256 percentIntereset = tiers[numberOfMinutes];
+        require(percentIntereset > 0, "Invalid number of minutes");
         require(msg.value > 0, "Cannot stack 0 ether");
         currentPositionId++;
         positions[currentPositionId] = Position({
             positionId: currentPositionId,
             walletAddress: msg.sender,
             createDate: block.timestamp,
-            unlockDate: block.timestamp + (numberOfDays * 1 days),
+            unlockDate: block.timestamp + (numberOfMinutes * 1 minutes),
             percentIntereset: percentIntereset,
             weiStaked: msg.value,
             weiIntereset: _calculateInterest(percentIntereset, msg.value),
@@ -56,8 +56,12 @@ contract Staking {
         return lockPeriods;
     }
 
-    function getInterestRate(uint256 numDays) external view returns (uint256) {
-        return tiers[numDays];
+    function getInterestRate(uint256 numMinutes)
+        external
+        view
+        returns (uint256)
+    {
+        return tiers[numMinutes];
     }
 
     function getPositionById(uint256 id)

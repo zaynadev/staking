@@ -3,7 +3,7 @@ const fs = require("fs/promises");
 
 async function main() {
   const Staking = await ethers.getContractFactory("Staking");
-  const staking = await Staking.deploy({ value: ethers.utils.parseEther("50") });
+  const staking = await Staking.deploy({ value: ethers.utils.parseEther("90") });
   await staking.deployed();
   console.log(`contract deployed at: ${staking.address}`);
 

@@ -21,7 +21,7 @@ const StakeModal = ({ onClose, stakingLength, stakingPercent, setAmount, stakeEt
 
             <div className="row">
               <h6 className="titleHeader stakingTerms">
-                {stakingLength} days @ {stakingPercent} APY
+                {stakingLength} minutes @ {stakingPercent} APY
               </h6>
             </div>
             <div className="row">

@@ -60,16 +60,22 @@ function App() {
   const getAssetIds = async () => {
     return await contract.getPositionIdsForAddress(signerAddress);
   };
-  const getAssets = async (ids, signer) => {
+
+  const getAssets = async (ids) => {
     const result = await Promise.all(ids.map((id) => contract.getPositionById(id)));
-    const _assets = result.map((asset) => ({
-      positionId: asset.positionId,
-      percentInterest: Number(asset.percentIntereset) / 100,
-      daysRemaining: calcDaysRemaining(asset.unlockDate),
-      etherInterest: toEther(asset.weiIntereset),
-      etherStaked: toEther(asset.weiStaked),
-      open: asset.open,
-    }));
+    let _assets = [];
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].positionId > 0)
+        _assets.push({
+          positionId: result[i].positionId,
+          percentInterest: Number(result[i].percentIntereset) / 100,
+          daysRemaining: calcDaysRemaining(result[i].unlockDate),
+          etherInterest: toEther(result[i].weiIntereset),
+          etherStaked: toEther(result[i].weiStaked),
+          open: result[i].open,
+        });
+    }
+
     return _assets;
   };
 
@@ -120,43 +126,43 @@ function App() {
 
           <div className="row">
             <div className="col-md-4">
-              <div onClick={() => openStakingModal(30, "7%")} className="marketOption">
+              <div onClick={() => openStakingModal(1, "2%")} className="marketOption">
                 <div className="glyphContainer hoverButton">
                   <span className="glyph">
                     <Coin />
                   </span>
                 </div>
                 <div className="optionData">
-                  <span>1 Month</span>
+                  <span>1 Minute</span>
                   <span className="optionPercent">2%</span>
                 </div>
               </div>
             </div>
 
             <div className="col-md-4">
-              <div onClick={() => openStakingModal(90, "10%")} className="marketOption">
+              <div onClick={() => openStakingModal(2, "10%")} className="marketOption">
                 <div className="glyphContainer hoverButton">
                   <span className="glyph">
                     <Coin />
                   </span>
                 </div>
                 <div className="optionData">
-                  <span>3 Months</span>
+                  <span>2 Minutes</span>
                   <span className="optionPercent">10%</span>
                 </div>
               </div>
             </div>
 
             <div className="col-md-4">
-              <div onClick={() => openStakingModal(180, "12%")} className="marketOption">
+              <div onClick={() => openStakingModal(2, "15%")} className="marketOption">
                 <div className="glyphContainer hoverButton">
                   <span className="glyph">
                     <Coin />
                   </span>
                 </div>
                 <div className="optionData">
-                  <span>6 Months</span>
-                  <span className="optionPercent">12%</span>
+                  <span>3 Minutes</span>
+                  <span className="optionPercent">15%</span>
                 </div>
               </div>
             </div>
@@ -173,7 +179,7 @@ function App() {
               <div className="col-md-2">Percent Interest</div>
               <div className="col-md-2">Staked</div>
               <div className="col-md-2">Interest</div>
-              <div className="col-md-2">Days Remaining</div>
+              <div className="col-md-2">Remaining Time</div>
               <div className="col-md-2"></div>
             </div>
           </div>
