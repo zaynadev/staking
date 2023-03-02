@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 export const toWei = (ether) => ethers.parseEther(ether);
 export const toEther = (wei) => ethers.formatEther(wei);
 
-export const calcDaysRemaining = (unlockDate) => {
+export const calcDaysRemaining = (unlockDate, createDate) => {
   const timeNow = Date.now() / 1000;
   const secondsRemaining = Number(unlockDate) - timeNow;
   const totalMinutes = Math.floor(secondsRemaining / 60);

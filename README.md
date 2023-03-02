@@ -1,13 +1,33 @@
-# Sample Hardhat Project
+# Staking Ethereum Dapp
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Solidity, Hardhat, ReactJS, MetaMask
 
-Try running some of the following tasks:
+#### 1. Install dependencies for hardhat project
+
+First you need to install project dependencies by running this command:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
+npm install
+```
+
+#### 2. Deploy smart contract
+
+Second you need to run a hardhat node and deploy te smart contract by running the following commands:
+
+```shell
 npx hardhat node
 npx hardhat run scripts/deploy.js
 ```
+
+#### 3. Install dependencies for client
+
+Finally, go to the client directory, install dependencies and start the project by running the following commands:
+
+```shell
+cd client
+npm install
+npm run start
+```
+
+**_Note_**
+You have to keep the hardhat node running while using the app

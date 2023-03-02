@@ -20,6 +20,8 @@ function App() {
   const [assetIds, setAssetIds] = useState([]);
   const [assets, setAssets] = useState([]);
 
+  const [counter, setCounter] = useState(0);
+
   //staking
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [stakingLength, setStakingLength] = useState(undefined);
@@ -43,7 +45,19 @@ function App() {
       }
     };
     load();
+    setInterval(function () {
+      setCounter((prev) => prev + 1);
+    }, 1000);
   }, []);
+
+  useEffect(() => {
+    setAssets(
+      assets.map((asset) => ({
+        ...asset,
+        daysRemaining: calcDaysRemaining(asset.unlockDate, asset.createDate),
+      }))
+    );
+  }, [counter]);
 
   const connectWallet = async () => {
     const _provider = await new ethers.BrowserProvider(window.ethereum);
@@ -69,9 +83,11 @@ function App() {
         _assets.push({
           positionId: result[i].positionId,
           percentInterest: Number(result[i].percentIntereset) / 100,
-          daysRemaining: calcDaysRemaining(result[i].unlockDate),
+          daysRemaining: calcDaysRemaining(result[i].unlockDate, result[i].createDate),
           etherInterest: toEther(result[i].weiIntereset),
           etherStaked: toEther(result[i].weiStaked),
+          unlockDate: result[i].unlockDate,
+          createDate: result[i].createDate,
           open: result[i].open,
         });
     }
@@ -195,7 +211,7 @@ function App() {
                 <div className="col-md-2">{a.percentInterest} %</div>
                 <div className="col-md-2">{a.etherStaked}</div>
                 <div className="col-md-2">{a.etherInterest}</div>
-                <div className="col-md-2">{a.daysRemaining}</div>
+                <div className="col-md-2">{a.open ? a.daysRemaining : "0s"}</div>
                 <div className="col-md-2">
                   {a.open ? (
                     <div onClick={() => withdraw(a.positionId)} className="orangeMiniButton">
